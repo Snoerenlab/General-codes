@@ -1,11 +1,8 @@
 # -*- coding: utf-8 -*-
 """
 Created on Thu Apr  4 14:10:44 2019
-
 @author: Eelke Snoeren
-
 Python protocol for Indrek's data from Groningen
-
 """
 
 import matplotlib.pyplot as plt
@@ -20,7 +17,7 @@ import os
 from matplotlib.backends.backend_pdf import PdfPages
 
 # Say where to save the file and with what name (note the use of / instead of \)
-out_path = "C:/Users/esn001/Desktop/python/Indrek/Output/results_observer.xlsx"
+out_path = "H:/Werk/Experimenten/Indrek Groningen/Output/results_observer.xlsx"
 
 # Load all excel files in the folder into one DataFrame and clean up
 dataraw = pd.DataFrame()
@@ -50,7 +47,7 @@ J='Unimportant'
 K='Unimportant'
 L='Observation'
 M='Unimportant'
-N='Behavior'
+N='Behavior_raw'
 O='Unknown'
 P='Unknown'
 Q='Unknown'
@@ -62,7 +59,6 @@ V='Time'
 W='NOTSET'
 X='RatID_OBS'
 Y='Behavior'
-Y='Sex_mod'
 Z='Treat_mod'
 
 # Fill out your treatment/stimulus behind definition SA-SZ
@@ -104,13 +100,14 @@ BW='Ejaculation5'
 BX='Ejaculation6'
 
 # Rename columns (add or remove letters according to number of columns)
-dataraw.columns = [B,C,D,E,F,G,J,I,H,K,L,M,N,O,P]
+dataraw.columns = [A,B,C,D,E,F,G,I,H,J,K,L,M,N,O,P]
+
 
 # Make a new datafile with selected columns
 data=dataraw[[L,H,N]]
 
 # Make RatID
-RatID =pd.DataFrame(np.where(data[N]=='Start rat 1', 'R1',""), copy = True)
+RatID =pd.DataFrame(np.where(data[N]=='Start rat 1', 'R1',"X"), copy = True)
 RatID =pd.DataFrame(np.where(data[N]=='Start rat 2', 'R2',RatID[0]), copy = True)
 RatID =pd.DataFrame(np.where(data[N]=='Start rat 3', 'R3',RatID[0]), copy = True)
 RatID =pd.DataFrame(np.where(data[N]=='Start rat 4', 'R4',RatID[0]), copy = True)
@@ -123,7 +120,7 @@ RatID =pd.DataFrame(np.where(data[N]=='Mount4', 'R4',RatID[0]), copy = True)
 RatID =pd.DataFrame(np.where(data[N]=='Mount5', 'R5',RatID[0]), copy = True)
 RatID =pd.DataFrame(np.where(data[N]=='Mount6', 'R6',RatID[0]), copy = True)
 RatID =pd.DataFrame(np.where(data[N]=='Intromission1', 'R1',RatID[0]), copy = True)
-RatID =pd.DataFrame(np.where(data[N]=='Intromisson2', 'R2',RatID[0]), copy = True)
+RatID =pd.DataFrame(np.where(data[N]=='Intromission2', 'R2',RatID[0]), copy = True)
 RatID =pd.DataFrame(np.where(data[N]=='Intromission3', 'R3',RatID[0]), copy = True) 
 RatID =pd.DataFrame(np.where(data[N]=='Intromission4', 'R4',RatID[0]), copy = True)
 RatID =pd.DataFrame(np.where(data[N]=='Intromission5', 'R5',RatID[0]), copy = True) 
@@ -161,6 +158,7 @@ Behavior2 =pd.DataFrame(np.where(data[N]=='Ejaculation4', 'Ejac',Behavior2[0]), 
 Behavior2 =pd.DataFrame(np.where(data[N]=='Ejaculation5', 'Ejac',Behavior2[0]), copy = True)
 Behavior2 =pd.DataFrame(np.where(data[N]=='Ejaculation6', 'Ejac',Behavior2[0]), copy = True)
 
+
 # Add the dataframes to data
 data = pd.concat([data, RatID, Behavior2], sort=False, axis=1)
 
@@ -175,6 +173,10 @@ data_noindex[X] = data_noindex[U].map(str) + data_noindex[L]
 
 # Number the behaviors on occurance
 data_noindex['obs_num'] = data_noindex.groupby(X)[Y].transform(lambda x: np.arange(1, len(x) + 1))
+
+writer = pd.ExcelWriter(out_path, engine='xlsxwriter')
+data_noindex.to_excel(writer,sheet_name='data_raw')
+writer.save()
 
 # Make a new column that makes an unique name for the behaviors per rat
 data_noindex['beh_num_trick'] = data_noindex[X].map(str) + data_noindex[Y]
@@ -220,8 +222,8 @@ data_noindex = data_noindex.sort_values(by=[X,H])
 # Make column with start times 
 data_noindex['Starttime']=np.where(data_noindex[Y]=='Start', data_noindex['beh_num'], np.NaN)
 data_noindex['Starttime']=np.where(data_noindex['Starttime']==1, data_noindex[H], np.NaN)
-    # mark situation where it does not start with mounts to later fill in mount latency in column 
-data_noindex['Starttime']=np.where(np.logical_and(data_noindex['obs_num']==1,data_noindex[Y]!='Start'),99999,data_noindex['Starttime']) 
+    # mark situation where it does not start with start to later fill in starttime in column 
+data_noindex['Starttime']=np.where(np.logical_and(data_noindex['obs_num']==1,data_noindex[Y]!='Start'),0,data_noindex['Starttime']) 
 data_noindex['Starttime'].fillna(method = "ffill", inplace=True)
     # now we empty the 99999 rows and fill it with the right numbers
 data_noindex['Starttime']=np.where(data_noindex['Starttime']==99999, np.NaN, data_noindex['Starttime'])
@@ -320,6 +322,7 @@ data_noindex['S1LEI'].fillna(method = "ffill", inplace=True)
 data_noindex['S1LEI']=np.where(data_noindex['S1LEI']==99999, np.NaN, data_noindex['S1LEI'])
 data_noindex['S1LEI'].fillna(method = "backfill", inplace=True)
 data_noindex['S1LEI']=np.where(data_noindex['ejac_check2']==2, Timetest, data_noindex['S1LEI'])
+data_noindex['S1LEI']=np.where(data_noindex['intro_check2']==2, Timetest, data_noindex['S1LEI'])
 
 # Make the first behavior belong to 1st ejaculatory series
 data_noindex['ejac_serie_filled']=np.where(data_noindex[Y]=='Ejac', data_noindex['beh_num'],np.NaN)
@@ -725,6 +728,9 @@ data_noindex['S3III']=data_noindex['S3LEB']/data_noindex['S3I']
 # Calculate and make column with copulatory rate (number of mounts and intromissions/ latency to ejaculation from 1st behavior) 
 # in 3rd ejaculatory series
 data_noindex['S3CR']=(data_noindex['S3M']+data_noindex['S3I'])/(data_noindex['S3LEB']) 
+
+data_noindex=data_noindex.replace([np.inf, -np.inf], np.nan)
+
 
 # Make a new excel sheet with only the important data
 data_total=data_noindex.copy()
