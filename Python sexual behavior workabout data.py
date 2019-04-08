@@ -319,6 +319,7 @@ data_noindex['S1LEI'].fillna(method = "ffill", inplace=True)
 data_noindex['S1LEI']=np.where(data_noindex['S1LEI']==99999, np.NaN, data_noindex['S1LEI'])
 data_noindex['S1LEI'].fillna(method = "backfill", inplace=True)
 data_noindex['S1LEI']=np.where(data_noindex['ejac_check2']==2, Timetest, data_noindex['S1LEI'])
+data_noindex['S1LEI']=np.where(data_noindex['intro_check2']==2, Timetest, data_noindex['S1LEI'])
 
 # Make the first behavior belong to 1st ejaculatory series
 data_noindex['ejac_serie_filled']=np.where(data_noindex[Y]=='Ejac', data_noindex['beh_num'],np.NaN)
