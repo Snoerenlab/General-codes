@@ -1,0 +1,219 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Wed Dec 16 13:05:33 2020 for python 3.8
+@author: Eelke Snoeren
+
+This script will automaticaly put all excel files in 1 file
+
+TO DO BEFOREHAND
+1) change the directory to the file where you have saved your files
+2) define output file name
+3) copy paste the file names that need combining
+4) copy paste the sheet names
+5) if you want to add the data_info sheet, copy paste this from another python script
+
+"""
+
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import seaborn as sns
+from itertools import chain
+sns.set()
+from PIL import Image
+import glob
+import os
+from matplotlib.backends.backend_pdf import PdfPages
+import multiprocessing as mp
+from pandas import ExcelWriter
+import openpyxl
+pd.set_option('use_inf_as_na', True)
+
+
+# HOME- Define the directory in which you stored the data (use / instead of \)
+directory= "C:/Users/esn001/Documents/Python 3.8/Data projects/Patty mountbout/Output"
+
+# # WORK- Define the directory in which you stored the data (use / instead of \)
+# directory= "C:/Users/esn001/OneDrive - UiT Office 365/python/Python 3.8/Data projects/Patty mountbout/Output"
+
+# Define output file names
+out_path1 = "%s/NFR005_TOTAL_mountbout_results.xlsx" % directory
+
+# Create general file and sheet name holders
+file1 = 'NFR005GR_mountbout_results.xlsx'
+file2 = 'NFR005TR_BL_mountbout_results.xlsx'
+file3 = 'NFR005TR_COR_mountbout_results.xlsx'
+file4 = 'NFR005TX_mountbout_results.xlsx'
+
+files = [file1,file2,file3,file4]
+os.chdir(directory)
+
+sheet1 = "Information"
+sheet2 = 'Results Sex_S1'
+sheet3 = 'Results Sex_S2'
+sheet4 = 'Results Mountbout_S1'
+sheet5 = 'Results Mountbout_S2'
+sheet6 = 'Results Mountbout_all'
+sheet7 = 'Results Behaviors_S1'
+sheet8 = 'Results Behaviors_S2'
+sheet9 = 'Results Behaviors_all'
+sheet10 = 'Results Behaviors_minprecop_S1'
+sheet11 = 'Results Behaviors_minprecop_S2'
+sheet12 = 'Results rest'
+
+sheets = [sheet2,sheet3,sheet4,sheet5,sheet6,sheet7,sheet8,sheet9,sheet10,sheet11,sheet12]    
+
+df1=pd.DataFrame()
+df2=pd.DataFrame()
+df3=pd.DataFrame()
+df4=pd.DataFrame()
+df5=pd.DataFrame()
+df6=pd.DataFrame()
+df7=pd.DataFrame()
+df8=pd.DataFrame()
+df9=pd.DataFrame()
+df10=pd.DataFrame()
+df11=pd.DataFrame()
+df_info=pd.DataFrame()
+
+for file in files:  # loop through Excel files
+        df = pd.read_excel(file, sheet_name=sheet2)
+        df1 = df1.append(df)
+        df = pd.read_excel(file, sheet_name=sheet3)
+        df2 = df2.append(df)
+        df = pd.read_excel(file, sheet_name=sheet4)
+        df3 = df3.append(df)
+        df = pd.read_excel(file, sheet_name=sheet5)
+        df4 = df4.append(df)
+        df = pd.read_excel(file, sheet_name=sheet6)
+        df5 = df5.append(df)
+        df = pd.read_excel(file, sheet_name=sheet7)
+        df6 = df6.append(df)
+        df = pd.read_excel(file, sheet_name=sheet8)
+        df7 = df7.append(df)
+        df = pd.read_excel(file, sheet_name=sheet9)
+        df8 = df8.append(df)
+        df = pd.read_excel(file, sheet_name=sheet10)
+        df9 = df9.append(df)
+        df = pd.read_excel(file, sheet_name=sheet11)
+        df10 = df10.append(df)
+        df = pd.read_excel(file, sheet_name=sheet12)
+        df11 = df11.append(df)
+
+
+# Make a sheet to explain the columns
+data_info=pd.DataFrame()
+
+data_info['Code']=('No mark','S mark','RATIDRAW','RATID','TREAT','VIRUS','EXP','L1M','L1I','L1E','L1B','TN_mount','TN_intro','TN_ejac','TN_copulations','IR','III','CR','LEB','LEI','PEIB','PEII','TN_MB',
+                  'TD_MB','MD_MB','TD_TO','MD_TO','MD_IMBI','TN_MB_single_mount','TN_MB_single_intro','TN_MB_single_ejac','TN_MB_single_cop','TN_MB_mount',
+                  'TN_MB_intro','MN_MB_mount','MN_MB_intro','TN_cop_oriented_behavior','TN_fem_oriented_behavior','TN_noncop_oriented_behavior','TD_cop_oriented_behavior',
+                  'TD_fem_oriented_behavior','TD_noncop_oriented_behavior','TN_PEI_cop_oriented_behavior','TN_PEI_fem_oriented_behavior','TN_PEI_noncop_oriented_behavior',
+                  'TD_PEI_cop_oriented_behavior','TD_PEI_fem_oriented_behavior','TD_PEI_noncop_oriented_behavior','TN_MB_exclsingle','TD_MB_exclsingle','MD_MB_exclsingle',
+                  'MN_MB_mount_exclsingle','MN_MB_intro_exclsingle','TN_clasping','TN_genigrooming','TN_chasing','TN_anosniff',
+                  'TN_head_to_fem','TN_grooming','TN_head_not_fem','TD_clasping','TD_genigrooming','TD_chasing','TD_anosniff','TD_head_to_fem','TD_grooming',
+                  'TD_head_not_fem','TD_PEI_clasping','TD_PEI_genigrooming','TD_PEI_chasing','TD_PEI_anosniff','TD_PEI_head_to_fem','TD_PEI_grooming','TD_PEI_head_not_fem',
+                  'TN_PEI_clasping','TN_PEI_genigrooming','TN_PEI_chasing','TN_PEI_anosniff','TN_PEI_head_to_fem','TN_PEI_grooming','TN_PEI_head_not_fem','precop','minprecop',
+                  'perc','perc_minprecop','perc control')
+
+data_info['Explanation']=('The data from the total experiment','The data from the ejaculatory series',
+                    'Raw rat ID',
+                          'RatID',
+                    'Treatment',
+                    'Virus',
+                    'Experiment',
+                    'Latency to first mount',
+                    'Latency to first intromission',
+                    'Latency to first ejaculation',
+                    'Latency to first behavior (mount or intromission)',
+                    'Total number of mounts',
+                    'Total number of intromissions',
+                    'Total number of ejaculations',
+                    'Total number of copulations (M+I+E)',
+                    'Intromission ratio = I/(I+M)',
+                    'Inter intromission interval = Total time test (all results) or ejaculation latency (series)/ number of intromissions',
+                    'Copulatory rate = (M+I+E)/Total time test (all results) or ejaculation latency (series)',
+                    'Latency to ejaculation from 1st behavior 1st (or 2nd) ejaculatory serie',
+                    'Latency to ejaculation from 1st intromissions 1st (or 2nd) ejaculatory serie',
+                    'postejaculatory interval to 1st behavior 1st (or 2nd) ejaculatory serie',
+                    'postejaculatory interval to 1st intromissions 1st (or 2nd) ejaculatory serie',
+                    'Total number of mount bouts',
+                    'Total duration of mount bouts (1sec for single copulation)',
+                    'Mean duration of mount bouts',
+                    'Total duration of time-outs',
+                    'Mean duration of time-outs',
+                    'Mean time from first mount of one mount bout to the first mount of the next mount bout',
+                    'Total number of single mounts as mount bout',
+                    'Total number of single intromissions as mount bout',
+                    'Total number of single ejaculations as mount bout',
+                    'Total number of single copulations as mount bout',
+                    'Total number of mounts in a mount bout (excluding the single copulations)',
+                    'Total number of intromissions in a mount bout (excluding the single copulations)',
+                    'Mean number of mounts in a mount bout (excluding the single copulations)',
+                    'Mean number of intromissions in a mount bout (excluding the single copulations)',
+                    'Total number of copulation-oriented behavior (Mount, intromission, ejaculation, clasping, genital grooming, chasing, anogenital sniffing)',
+                    'Total number of female-oriented behavior (Copulation-oriented behavior + head towards female)',
+                    'Total number of non-copulation-oriented behavior (Other grooming, head not towards female)',
+                    'Total duration of copulation-oriented behavior (Mount, intromission, ejaculation, clasping, genital grooming, chasing, anogenital sniffing)',
+                    'Total duration of female-oriented behavior (Copulation-oriented behavior + head towards female)',
+                    'Total duration of non-copulation-oriented behavior (Other grooming, head not towards female)',
+                    'Total number of copulation-oriented behavior during PEI(Mount, intromission, ejaculation, clasping, genital grooming, chasing, anogenital sniffing)',
+                    'Total number of female-oriented behavior during PEI(Copulation-oriented behavior + head towards female)',
+                    'Total number of non-copulation-oriented behavior during PEI(Other grooming, head not towards female)',
+                    'Total duration of copulation-oriented behavior during PEI (Mount, intromission, ejaculation, clasping, genital grooming, chasing, anogenital sniffing)',
+                    'Total duration of female-oriented behavior during PEI(Copulation-oriented behavior + head towards female)',
+                    'Total duration of non-copulation-oriented behavior during PEI (Other grooming, head not towards female)',
+                    'Total number of mount bouts excluding the single copulations',
+                    'Total duratuin of mount bouts excluding the single copulations',
+                    'Mean duration of mount bouts excluding the single copulations',
+                    'Mean number of mounts in mount bouts excluding the single copulations',
+                    'Mean number of intromissions in mount bouts excluding the single copulationsTotal number of clasping (Mounting the female without pelvic thrusting)',
+                    'Total number of clasping (Mounting the female without pelvic thrusting)',
+                    'Total number of genital grooming (Autogrooming of anogenital region)',
+                    'Total number of chasing (Running after the female)',
+                    'Total number of anogenital sniffing (Sniffing the anogenital region of the female)',
+                    'Total number of head towards female (Looking at the female while not engaging in other behavior)',
+                    'Total number of other grooming (Autogrooming in other regions than anogenital)',
+                    'Total number of head not towards female (Any behavior that is not oriented towards the female, such as walking, sniffing the environment, and looking at another direction than the female)',
+                    'Total duration of clasping (Mounting the female without pelvic thrusting)',
+                    'Total duration of genital grooming (Autogrooming of anogenital region)',
+                    'Total duration of chasing (Running after the female)',
+                    'Total duration of anogenital sniffing (Sniffing the anogenital region of the female)',
+                    'Total duration of head towards female (Looking at the female while not engaging in other behavior)',
+                    'Total duration of other grooming (Autogrooming in other regions than anogenital)',
+                    'Total duration of head not towards female (Any behavior that is not oriented towards the female, such as walking, sniffing the environment, and looking at another direction than the female)',
+                    'Total duration of clasping during PEI (Mounting the female without pelvic thrusting)',
+                    'Total duration of genital grooming during PEI (Autogrooming of anogenital region)',
+                    'Total duration of chasing during PEI (Running after the female)',
+                    'Total duration of anogenital sniffing during PEI (Sniffing the anogenital region of the female)',
+                    'Total duration of head towards female during PEI (Looking at the female while not engaging in other behavior)',
+                    'Total duration of other grooming during PEI (Autogrooming in other regions than anogenital)',
+                    'Total duration of head not towards female during PEI (Any behavior that is not oriented towards the female, such as walking, sniffing the environment, and looking at another direction than the female)',
+                    'Total number of clasping during PEI (Mounting the female without pelvic thrusting)',
+                    'Total number of genital grooming during PEI (Autogrooming of anogenital region)',
+                    'Total number of chasing during PEI (Running after the female)',
+                    'Total number of anogenital sniffing during PEI (Sniffing the anogenital region of the female)',
+                    'Total number of head towards femaleduring PEI  (Looking at the female while not engaging in other behavior)',
+                    'Total number of other grooming during PEI (Autogrooming in other regions than anogenital)',
+                    'Total number of head not towards female during PEI (Any behavior that is not oriented towards the female, such as walking, sniffing the environment, and looking at another direction than the female)',
+                    'Number and duration of behavior taking place before the first copulation',
+                    'Number and duration of behavior when the behavior before first copulation is taken off',
+                    'Percentage of behavior performed in the period stated', 'percentage of behavior performed in period after 1st behavior (not intromission)',
+                    'Control whether percentage of female oriented behavior and noncopulatory behavior matches the 100%. If lower, not the full 1800 seconds were scored - can be found on "Results Rest" sheet')
+
+
+
+writer1 = pd.ExcelWriter(out_path1, engine='xlsxwriter')
+data_info.to_excel(writer1, sheet_name='Information')
+df1.to_excel(writer1, sheet_name='Results Sex_S1')
+df2.to_excel(writer1, sheet_name='Results Sex_S2')
+df3.to_excel(writer1, sheet_name='Results Mountbout_S1')
+df4.to_excel(writer1, sheet_name='Results Mountbout_S2')
+df5.to_excel(writer1, sheet_name='Results Mountbout_all')
+df6.to_excel(writer1, sheet_name='Results Behaviors_S1')
+df7.to_excel(writer1, sheet_name='Results Behaviors_S2')
+df8.to_excel(writer1, sheet_name='Results Behaviors_all')
+df9.to_excel(writer1, sheet_name='Results Behaviors_minprecop_S1')
+df10.to_excel(writer1, sheet_name='Results Behaviors_minprecop_S2')
+df11.to_excel(writer1, sheet_name='Results rest')
+writer1.save()
+writer1.close()
